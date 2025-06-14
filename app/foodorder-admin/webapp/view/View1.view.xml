@@ -1,6 +1,240 @@
-<mvc:View controllerName="foodorderadmin.controller.View1"
+<mvc:View
+    controllerName="foodorderadmin.controller.View1"
+    height="100%"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-    <Page id="page" title="{i18n>title}">
-    </Page>
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:fb="sap.ui.comp.filterbar"
+>
+    <f:DynamicPage
+        id="foodOrdersPage"
+        headerExpanded="true"
+    >
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="Food Orders Management" />
+                </f:heading>
+                <f:expandedContent>
+                    <Label
+                        text="Manage and filter food orders by date, buyer, and status"
+                    />
+                </f:expandedContent>
+                <f:snappedContent>
+                    <Label text="Food Orders | Filters Active" />
+                </f:snappedContent>
+            </f:DynamicPageTitle>
+        </f:title>
+        <f:header>
+            <f:DynamicPageHeader>
+                <f:content>
+                    <HBox
+                        wrap="Wrap"
+                        alignItems="End"
+                        class="sapUiMediumMargin"
+                    >
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Order Date Range:" />
+                            <DateRangeSelection
+                                id="orderDateFilter"
+                                placeholder="Select Date Range"
+                                change=".onFilterChange"
+                                width="15rem"
+                            />
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Buyer:" />
+                            <ComboBox
+                                id="buyerFilter"
+                                placeholder="Select Buyer"
+                                width="180px"
+                                items="{
+                                            path: '/Buyers',
+                                            sorter: {
+                                                path: 'buyerName'
+                                            }
+                                        }"
+                                selectionChange=".onFilterChange"
+                            >
+                                <core:Item
+                                    key="{buyerName}"
+                                    text="{buyerName}"
+                                />
+                            </ComboBox>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Order Status:" />
+                            <ComboBox
+                                id="statusFilter"
+                                placeholder="Select Status"
+                                width="150px"
+                                items="{/OrderStatuses}"
+                                selectionChange=".onFilterChange"
+                            >
+                                <core:Item
+                                    key="{code}"
+                                    text="{name}"
+                                />
+                            </ComboBox>
+                        </VBox>
+                        <VBox>
+                            <Label text=" " />
+                            <HBox>
+                                <Button
+                                    text="Apply"
+                                    type="Emphasized"
+                                    press=".onApplyFilters"
+                                    class="sapUiTinyMarginEnd"
+                                />
+                                <Button
+                                    text="Clear"
+                                    press=".onClearFilters"
+                                />
+                            </HBox>
+                        </VBox>
+                    </HBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        <f:content>
+            <Table
+                id="ordersTable"
+                items="{
+                    path: '/Orders',
+                    parameters: {
+                        expand: 'buyer,status',
+                        select: 'ID,orderNumber,orderDate,orderTime,numberOfPeople,totalAmount,currency_code,buyer_ID,status_code,buyer/buyerName,buyer/buyerEmpid,buyer/buyerContact,status/name,status/code'
+                    }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect"
+            >
+                <headerToolbar>
+                    <Toolbar>
+                        <Title
+                            id="tableTitle"
+                            text="Orders ({= ${/Orders}.length || 0})"
+                        />
+                        <ToolbarSpacer />
+                        <Button
+                            text="Create Order"
+                            type="Emphasized"
+                            icon="sap-icon://add"
+                            press=".onCreateOrder"
+                        />
+                        <Button
+                            text="Export"
+                            icon="sap-icon://excel-attachment"
+                            press=".onExport"
+                        />
+                        <Button
+                            text="Refresh"
+                            icon="sap-icon://refresh"
+                            press=".onRefresh"
+                        />
+                    </Toolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="12rem">
+                        <Text text="Order Number" />
+                    </Column>
+                    <Column width="15rem">
+                        <Text text="Buyer Information" />
+                    </Column>
+                    <Column width="12rem">
+                        <Text text="Order Date/Time" />
+                    </Column>
+                    <Column
+                        width="8rem"
+                        hAlign="Center"
+                    >
+                        <Text text="People" />
+                    </Column>
+                    <Column
+                        width="12rem"
+                        hAlign="End"
+                    >
+                        <Text text="Total Amount" />
+                    </Column>
+                    <Column
+                        width="10rem"
+                        hAlign="Center"
+                    >
+                        <Text text="Status" />
+                    </Column>
+                </columns>
+                <items>
+                    <ColumnListItem
+                        press=".onOrderPress"
+                        type="Navigation"
+                        class="orderListItem"
+                    >
+                        <cells>
+                            <VBox>
+                                <Text
+                                    text="{orderNumber}"
+                                    class="sapThemeText-asHeading6"
+                                />
+                            </VBox>
+                            <Text
+                                text="{buyer/buyerName}"
+                                class="sapThemeText-asHeading6"
+                            />
+                            <!-- <VBox>
+                                <Text
+                                    text="{buyer/buyerName}"
+                                    class="sapThemeText-asHeading6"
+                                />
+                                <Text
+                                    text="{buyer/buyerEmpid}"
+                                    class="sapUiTinyMarginTop"
+                                />
+                                <Text
+                                    text="{buyer/buyerContact}"
+                                    class="sapUiTinyMarginTop sapThemeTextColor-asDisabled"
+                                />
+                            </VBox> -->
+                            <Text
+                                text="{
+                                        path: 'orderDate',
+                                        type: 'sap.ui.model.odata.type.Date'
+                                    }"
+                            />
+                            <ObjectNumber
+                                number="{numberOfPeople}"
+                                unit="people"
+                            />
+                            <ObjectNumber
+                                core:require="{Currency: 'sap/ui/model/type/Currency'}"
+                                number="{
+                                    parts:[
+                                        {path:'totalAmount'},
+                                        {path:'currency_code'}
+                                    ],
+                                    type: 'Currency',
+                                    formatOptions: {showMeasure: false}
+                                }"
+                                unit="{currency_code}"
+                            />
+                            <ObjectStatus
+                                text="{status/name}"
+                                state="{
+                                    path: 'status/code',
+                                    formatter: '.formatStatusState'
+                                }"
+                                icon="{
+                                    path: 'status/code',
+                                    formatter: '.formatStatusIcon'
+                                }"
+                                inverted="true"
+                            />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </f:content>
+    </f:DynamicPage>
 </mvc:View>

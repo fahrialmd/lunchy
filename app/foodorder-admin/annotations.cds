@@ -1,1 +1,1 @@
-using com.fahrialmd.lunchy.service.LunchyService as service from '../../srv/lunch-service';
+using com.fahrialmd.lunchy.service.LunchyService as service from '../../srv/lunchy-service';
