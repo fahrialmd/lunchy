@@ -21,6 +21,8 @@ sap.ui.define([
 
             // Load initial data
             this._loadData();
+
+            this._oRouter = this.getOwnerComponent().getRouter();
         },
 
         /* =========================================================== */
@@ -138,15 +140,18 @@ sap.ui.define([
         /* Table Event Handlers                                       */
         /* =========================================================== */
 
+
         onOrderPress: function (oEvent) {
             const oBindingContext = oEvent.getSource().getBindingContext();
             const sOrderId = oBindingContext.getProperty("ID");
             const sOrderNumber = oBindingContext.getProperty("orderNumber");
 
-            MessageToast.show(`Opening order: ${sOrderNumber}`);
+            console.log("Navigating to order:", sOrderNumber, "with ID:", sOrderId);
 
-            // Navigate to order details (implement as needed)
-            // this._navigateToOrderDetails(sOrderId);
+            // Navigate to order detail page
+            this._oRouter.navTo("orderItems", {
+                orderId: sOrderId
+            });
         },
 
         onCreateOrder: function () {
@@ -268,10 +273,10 @@ sap.ui.define([
         /* Helper Methods                                              */
         /* =========================================================== */
 
-        _navigateToOrderDetails: function (sOrderId) {
+        _navigateToOrderItems: function (sOrderId) {
             // Implement navigation to order details page
             const oRouter = this.getOwnerComponent().getRouter();
-            oRouter.navTo("orderDetails", {
+            oRouter.navTo("orderItems", {
                 orderId: sOrderId
             });
         },

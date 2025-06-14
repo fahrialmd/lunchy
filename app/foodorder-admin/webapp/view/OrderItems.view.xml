@@ -1,0 +1,365 @@
+<mvc:View
+    controllerName="foodorderadmin.controller.OrderItems"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:uxap="sap.uxap"
+>
+    <uxap:ObjectPageLayout
+        id="orderObjectPage"
+        showTitleInHeaderContent="true"
+        alwaysShowContentHeader="false"
+        preserveHeaderStateOnScroll="false"
+        headerContentPinnable="true"
+        isChildPage="true"
+        upperCaseAnchorBar="false"
+    >
+        <!-- Header Title -->
+        <uxap:headerTitle>
+            <uxap:ObjectPageDynamicHeaderTitle>
+                <uxap:expandedHeading>
+                    <Title
+                        text="{orderNumber}"
+                        level="H2"
+                    />
+                </uxap:expandedHeading>
+                <uxap:snappedHeading>
+                    <FlexBox
+                        fitContainer="true"
+                        alignItems="Center"
+                    >
+                        <Title
+                            text="{orderNumber}"
+                            level="H2"
+                        />
+                    </FlexBox>
+                </uxap:snappedHeading>
+                <uxap:expandedContent>
+                    <Text text="Order Details and Items" />
+                </uxap:expandedContent>
+                <uxap:snappedContent>
+                    <Text text="Order Details" />
+                </uxap:snappedContent>
+                <uxap:actions>
+                    <Button
+                        text="Edit"
+                        type="Emphasized"
+                        icon="sap-icon://edit"
+                        press=".onEditOrder"
+                        visible="{path: 'status/code', formatter: '.isOrderEditable'}"
+                    />
+                    <Button
+                        text="Export"
+                        icon="sap-icon://excel-attachment"
+                        press=".onExportOrder"
+                    />
+                    <Button
+                        text="Print"
+                        icon="sap-icon://print"
+                        press=".onPrintOrder"
+                    />
+                </uxap:actions>
+            </uxap:ObjectPageDynamicHeaderTitle>
+        </uxap:headerTitle>
+
+        <!-- Header Content -->
+        <uxap:headerContent>
+            <FlexBox
+                wrap="Wrap"
+                fitContainer="true"
+                alignItems="Stretch"
+            >
+                <!-- Order Status -->
+                <VBox class="sapUiMediumMarginEnd">
+                    <Label text="Status:" />
+                    <ObjectStatus
+                        text="{status/name}"
+                        state="{path: 'status/code', formatter: '.formatStatusState'}"
+                        icon="{path: 'status/code', formatter: '.formatStatusIcon'}"
+                        class="sapUiSmallMarginTop"
+                    />
+                </VBox>
+
+                <!-- Buyer Information -->
+                <VBox class="sapUiMediumMarginEnd">
+                    <Label text="Buyer:" />
+                    <Text
+                        text="{buyer/buyerName}"
+                        class="sapUiSmallMarginTop sapThemeText-asHeading6"
+                    />
+                    <Text
+                        text="{buyer/buyerEmpid}"
+                        class="sapUiTinyMarginTop"
+                    />
+                    <Text
+                        text="{buyer/buyerContact}"
+                        class="sapUiTinyMarginTop"
+                    />
+                </VBox>
+
+                <!-- Order Date & Time -->
+                <VBox class="sapUiMediumMarginEnd">
+                    <Label text="Order Date:" />
+                    <Text
+                        text="{path: 'orderDate', type: 'sap.ui.model.type.Date'}"
+                        class="sapUiSmallMarginTop"
+                    />
+                    <Text
+                        text="{path: 'orderTime', type: 'sap.ui.model.type.Time'}"
+                        class="sapUiTinyMarginTop"
+                    />
+                </VBox>
+
+                <!-- People Count -->
+                <VBox class="sapUiMediumMarginEnd">
+                    <Label text="Participants:" />
+                    <ObjectNumber
+                        number="{numberOfPeople}"
+                        unit="people"
+                        state="Information"
+                        class="sapUiSmallMarginTop"
+                    />
+                </VBox>
+
+                <!-- Total Amount -->
+                <VBox class="sapUiMediumMarginEnd">
+                    <Label text="Total Amount:" />
+                    <ObjectNumber
+                        core:require="{Currency: 'sap/ui/model/type/Currency'}"
+                        number="{
+                            parts:[
+                                {path:'totalAmount'},
+                                {path:'currency_code'}
+                            ],
+                            type: 'Currency',
+                            formatOptions: {showMeasure: false}
+                        }"
+                        unit="{currency_code}"
+                        state="{path: 'totalAmount', formatter: '.formatAmountState'}"
+                        class="sapUiSmallMarginTop"
+                    />
+                </VBox>
+            </FlexBox>
+        </uxap:headerContent>
+
+        <!-- Object Page Sections -->
+        <uxap:sections>
+            <!-- Order Details Section -->
+            <uxap:ObjectPageSection
+                title="Order Information"
+                importance="High"
+            >
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection title="Details">
+                        <uxap:blocks>
+                            <VBox class="sapUiMediumMargin">
+                                <f:SimpleForm
+                                    editable="false"
+                                    layout="ResponsiveGridLayout"
+                                    title="Order Details"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1"
+                                >
+                                    <f:content>
+                                        <Label text="Order Number:" />
+                                        <Text text="{orderNumber}" />
+
+                                        <Label text="Order ID:" />
+                                        <Text text="{ID}" />
+
+                                        <Label text="Number of People:" />
+                                        <Text text="{numberOfPeople}" />
+
+                                        <Label text="Payment Method:" />
+                                        <Text text="{paymentMethod}" />
+
+                                        <Label text="Delivery Fee:" />
+                                        <ObjectNumber
+                                            number="{deliveryFee}"
+                                            unit="{currency_code}"
+                                        />
+
+                                        <Label text="Discount Percentage:" />
+                                        <Text text="{discountPercent}%" />
+
+                                        <Label text="Discount Limit:" />
+                                        <ObjectNumber
+                                            number="{discountLimit}"
+                                            unit="{currency_code}"
+                                        />
+
+                                        <Label text="Extra Charges:" />
+                                        <ObjectNumber
+                                            number="{extraCharges}"
+                                            unit="{currency_code}"
+                                        />
+
+                                        <Label text="Subtotal:" />
+                                        <ObjectNumber
+                                            number="{subtotal}"
+                                            unit="{currency_code}"
+                                        />
+
+                                        <Label text="Gopay Recommended:" />
+                                        <Text
+                                            text="{path: 'gopayRecommended', formatter: '.formatBoolean'}"
+                                        />
+                                    </f:content>
+                                </f:SimpleForm>
+                            </VBox>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <!-- Order Items Section -->
+            <uxap:ObjectPageSection
+                title="Order Items"
+                importance="High"
+            >
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection title="Items List">
+                        <uxap:blocks>
+                            <Table
+                                id="orderItemsTable"
+                                items="{
+                                    path: 'items',
+                                    parameters: {
+                                        expand: 'itemStatus'
+                                    }
+                                }"
+                                growing="true"
+                                growingThreshold="20"
+                                class="sapUiResponsiveMargin"
+                            >
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title
+                                            text="Order Items ({= ${items}.length || 0})"
+                                        />
+                                        <ToolbarSpacer />
+                                        <Button
+                                            text="Add Item"
+                                            type="Emphasized"
+                                            icon="sap-icon://add"
+                                            press=".onAddItem"
+                                            visible="{path: 'status/code', formatter: '.isOrderEditable'}"
+                                        />
+                                    </Toolbar>
+                                </headerToolbar>
+
+                                <columns>
+                                    <Column>
+                                        <Text text="Customer Name" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Menu Item" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Quantity" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Unit Price" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Item Total" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions" />
+                                    </Column>
+                                </columns>
+
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{customerName}" />
+                                            <VBox>
+                                                <Text text="{menuItemName}" />
+                                                <Text
+                                                    text="{specialRequest}"
+                                                    class="sapUiTinyMarginTop sapThemeTextColor-asDisabled"
+                                                    visible="{path: 'specialRequest', formatter: '.hasValue'}"
+                                                />
+                                            </VBox>
+                                            <Text text="{quantity}" />
+                                            <ObjectNumber
+                                                number="{unitPrice}"
+                                                unit="{currency_code}"
+                                            />
+                                            <ObjectNumber
+                                                number="{itemTotal}"
+                                                unit="{currency_code}"
+                                                state="Success"
+                                            />
+                                            <ObjectStatus
+                                                text="{itemStatus/name}"
+                                                state="{path: 'itemStatus/code', formatter: '.formatItemStatusState'}"
+                                            />
+                                            <HBox>
+                                                <Button
+                                                    icon="sap-icon://edit"
+                                                    type="Transparent"
+                                                    tooltip="Edit Item"
+                                                    press=".onEditItem"
+                                                    visible="{path: '/status/code', formatter: '.isOrderEditable'}"
+                                                />
+                                                <Button
+                                                    icon="sap-icon://delete"
+                                                    type="Transparent"
+                                                    tooltip="Delete Item"
+                                                    press=".onDeleteItem"
+                                                    visible="{path: '/status/code', formatter: '.isOrderEditable'}"
+                                                />
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <!-- Timeline Section (Optional) -->
+            <uxap:ObjectPageSection
+                title="Order Timeline"
+                importance="Medium"
+            >
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection title="Activity Log">
+                        <uxap:blocks>
+                            <VBox class="sapUiMediumMargin">
+                                <Text
+                                    text="Order timeline and activity log will be displayed here."
+                                />
+                                <!-- You can implement timeline using sap.suite.ui.commons.Timeline -->
+                            </VBox>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+        </uxap:sections>
+
+        <!-- Footer -->
+        <uxap:footer>
+            <Toolbar>
+                <ToolbarSpacer />
+                <Button
+                    text="Back to Orders"
+                    press=".onNavBack"
+                />
+                <Button
+                    text="Save Changes"
+                    type="Emphasized"
+                    press=".onSaveOrder"
+                    visible="{path: 'status/code', formatter: '.isOrderEditable'}"
+                />
+            </Toolbar>
+        </uxap:footer>
+    </uxap:ObjectPageLayout>
+</mvc:View>

@@ -62,7 +62,9 @@
       "libs": {
         "sap.m": {},
         "sap.ui.core": {},
-        "sap.f": {}
+        "sap.f": {},
+        "sap.uxap": {},
+        "sap.ui.comp": {}
       }
     },
     "contentDensities": {
@@ -112,12 +114,23 @@
           "target": [
             "TargetView1"
           ]
+        },
+        {
+          "pattern": "order({orderId}):?query:",
+          "name": "orderItems",
+          "target": "TargetOrderItems"
         }
       ],
       "targets": {
         "TargetView1": {
+          "viewType": "XML",
           "id": "View1",
           "name": "View1"
+        },
+        "TargetOrderItems": {
+          "viewType": "XML",
+          "id": "orderItems",
+          "name": "OrderItems"
         }
       }
     },
