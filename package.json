@@ -6,5 +6,7 @@
   "repository": "<Add your repository here>",
   "devDependencies": {
     "@sap/cds-dk": "^9.0.4"
-  }
+  },
+  "sapux": [
+  ]
 }
