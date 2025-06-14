@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/odata/v4/odata/v4/lunchy/",
+        "uri": "/odata/v4/lunchy/",
         "type": "OData",
         "settings": {
           "annotations": [],
