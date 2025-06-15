@@ -1,253 +1,231 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
+    "sap/ui/core/routing/History",
+    "sap/ui/core/ValueState",
     "sap/m/MessageToast",
-    "sap/m/MessageBox",
-    "sap/ui/core/routing/History"
-], function (Controller, MessageToast, MessageBox, History) {
+    "sap/m/MessageBox"
+], function (Controller, History, ValueState, MessageToast, MessageBox) {
     "use strict";
 
     return Controller.extend("foodorderadmin.controller.OrderItems", {
 
         onInit: function () {
-            // Get router and attach route matched event
-            this._oRouter = this.getOwnerComponent().getRouter();
-            this._oModel = this.getOwnerComponent().getModel();
-
-            this._oRouter.getRoute("orderItems").attachPatternMatched(this._onRouteMatched, this);
+            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            oRouter.getRoute("orderItems").attachPatternMatched(this._onRouteMatched, this);
         },
-
-        /* =========================================================== */
-        /* Route Handling                                             */
-        /* =========================================================== */
 
         _onRouteMatched: function (oEvent) {
-            const sOrderId = oEvent.getParameter("arguments").orderId;
-            console.log("Route matched with order ID:", sOrderId);
+            var sOrderId = oEvent.getParameter("arguments").orderId;
+            var sOrderPath = "/Orders('" + sOrderId + "')";
 
-            this._bindView(sOrderId);
-        },
-
-        _bindView: function (sOrderId) {
-            // Create binding path for the order
-            const sObjectPath = `/Orders('${sOrderId}')`;
-
-            console.log("Binding view to:", sObjectPath);
-
-            // Bind the view to the order with expanded associations
             this.getView().bindElement({
-                path: sObjectPath,
+                path: sOrderPath,
                 parameters: {
-                    expand: "buyer,status,items,items/itemStatus"
+                    $expand: "buyer,status,items($expand=itemStatus)"
                 },
                 events: {
-                    change: this._onBindingChange.bind(this),
-                    dataRequested: function () {
-                        this.getView().setBusy(true);
-                    }.bind(this),
-                    dataReceived: function () {
-                        this.getView().setBusy(false);
+                    dataReceived: function (oEvent) {
+                        var oData = oEvent.getParameter("data");
+                        console.log("Received data:", oData);
+
+                        // Data exists, log details
+                        console.log("✅ Order found:", oData);
+                        console.log("Order Number:", oData.orderNumber);
+                        console.log("Items:", oData.items);
                     }.bind(this)
                 }
             });
         },
-
-        _onBindingChange: function () {
-            const oView = this.getView();
-            const oElementBinding = oView.getElementBinding();
-
-            // Check if data exists
-            if (oElementBinding && !oElementBinding.getBoundContext()) {
-                this._oRouter.getTargets().display("notFound");
-                return;
-            }
-
-            // Update page title
-            const oContext = oElementBinding.getBoundContext();
-            if (oContext) {
-                const sOrderNumber = oContext.getProperty("orderNumber");
-                const sTitle = `Order ${sOrderNumber}`;
-
-                // Update browser title if needed
-                document.title = sTitle;
-
-                console.log("Order loaded successfully:", sOrderNumber);
-            }
-        },
-
-        /* =========================================================== */
-        /* Event Handlers                                             */
-        /* =========================================================== */
-
-        onNavBack: function () {
-            const sPreviousHash = History.getInstance().getPreviousHash();
+        /**
+         * Navigate back to previous page
+         */
+        _navBack: function () {
+            var oHistory = History.getInstance();
+            var sPreviousHash = oHistory.getPreviousHash();
 
             if (sPreviousHash !== undefined) {
-                // Go back to previous page
                 window.history.go(-1);
             } else {
-                // Navigate to main view
-                this._oRouter.navTo("main", {}, true);
+                var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+                oRouter.navTo("main", {}, true);
             }
         },
-
-        onEditOrder: function () {
-            const oContext = this.getView().getBindingContext();
-            const sOrderNumber = oContext.getProperty("orderNumber");
-
-            MessageToast.show(`Edit order: ${sOrderNumber}`);
-
-            // TODO: Implement edit functionality
-            // You can:
-            // 1. Navigate to edit view
-            // 2. Open edit dialog
-            // 3. Enable inline editing
-        },
-
-        onSaveOrder: function () {
-            const oContext = this.getView().getBindingContext();
-            const sOrderNumber = oContext.getProperty("orderNumber");
-
-            MessageBox.confirm(
-                `Save changes to order ${sOrderNumber}?`,
-                {
-                    onClose: function (sAction) {
-                        if (sAction === MessageBox.Action.OK) {
-                            // TODO: Implement save logic
-                            this._saveOrder();
-                        }
-                    }.bind(this)
-                }
-            );
-        },
-
-        _saveOrder: function () {
-            // Submit changes to backend
-            this._oModel.submitChanges({
-                success: function () {
-                    MessageToast.show("Order saved successfully");
-                },
-                error: function (oError) {
-                    MessageBox.error("Error saving order: " + oError.message);
-                }
-            });
-        },
-
-        onExportOrder: function () {
-            const oContext = this.getView().getBindingContext();
-            const sOrderNumber = oContext.getProperty("orderNumber");
-
-            MessageToast.show(`Export order: ${sOrderNumber}`);
-
-            // TODO: Implement export functionality
-        },
-
-        onPrintOrder: function () {
-            const oContext = this.getView().getBindingContext();
-            const sOrderNumber = oContext.getProperty("orderNumber");
-
-            MessageToast.show(`Print order: ${sOrderNumber}`);
-
-            // TODO: Implement print functionality
-            // window.print(); // Simple browser print
-        },
-
-        /* =========================================================== */
-        /* Order Items Event Handlers                                 */
-        /* =========================================================== */
-
-        onAddItem: function () {
-            const oContext = this.getView().getBindingContext();
-            const sOrderNumber = oContext.getProperty("orderNumber");
-
-            MessageToast.show(`Add item to order: ${sOrderNumber}`);
-
-            // TODO: Open add item dialog
-        },
-
-        onEditItem: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext();
-            const sCustomerName = oContext.getProperty("customerName");
-            const sMenuItem = oContext.getProperty("menuItemName");
-
-            MessageToast.show(`Edit item: ${sMenuItem} for ${sCustomerName}`);
-
-            // TODO: Open edit item dialog
-        },
-
-        onDeleteItem: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext();
-            const sCustomerName = oContext.getProperty("customerName");
-            const sMenuItem = oContext.getProperty("menuItemName");
-
-            MessageBox.confirm(
-                `Delete item "${sMenuItem}" for ${sCustomerName}?`,
-                {
-                    onClose: function (sAction) {
-                        if (sAction === MessageBox.Action.OK) {
-                            this._deleteItem(oContext);
-                        }
-                    }.bind(this)
-                }
-            );
-        },
-
-        _deleteItem: function (oContext) {
-            // Delete the item
-            this._oModel.remove(oContext.getPath(), {
-                success: function () {
-                    MessageToast.show("Item deleted successfully");
-                },
-                error: function (oError) {
-                    MessageBox.error("Error deleting item: " + oError.message);
-                }
-            });
-        },
-
-        /* =========================================================== */
-        /* Formatters                                                  */
-        /* =========================================================== */
 
         formatStatusState: function (sStatusCode) {
             switch (sStatusCode) {
-                case "O": return "Warning";
-                case "C": return "Success";
-                default: return "None";
+                case "O":
+                    return ValueState.Warning; // Open - Warning (yellow)
+                case "C":
+                    return ValueState.Success; // Close - Success (green)
+                default:
+                    return ValueState.None;
             }
         },
 
         formatStatusIcon: function (sStatusCode) {
             switch (sStatusCode) {
-                case "O": return "sap-icon://pending";
-                case "C": return "sap-icon://accept";
-                default: return "sap-icon://question-mark";
+                case "O":
+                    return "sap-icon://pending";
+                case "C":
+                    return "sap-icon://accept";
+                default:
+                    return "";
             }
         },
 
-        formatAmountState: function (iAmount) {
-            if (!iAmount) return "None";
-            if (iAmount > 2000000) return "Error";
-            if (iAmount > 1000000) return "Warning";
-            return "Success";
-        },
-
-        formatItemStatusState: function (sStatusCode) {
-            switch (sStatusCode) {
-                case "P": return "Success"; // Paid
-                case "U": return "Warning"; // Unpaid
-                default: return "None";
+        formatItemStatusState: function (sItemStatusCode) {
+            switch (sItemStatusCode) {
+                case "P":
+                    return ValueState.Success; // Paid - Success (green)
+                case "U":
+                    return ValueState.Error;   // Unpaid - Error (red)
+                default:
+                    return ValueState.None;
             }
         },
 
-        formatBoolean: function (bValue) {
-            return bValue ? "Yes" : "No";
+        formatItemStatusIcon: function (sItemStatusCode) {
+            switch (sItemStatusCode) {
+                case "P":
+                    return "sap-icon://accept";
+                case "U":
+                    return "sap-icon://decline";
+                default:
+                    return "";
+            }
         },
 
-        isOrderEditable: function (sStatusCode) {
-            return sStatusCode === "O"; // Only open orders are editable
+        onAddItem: function () {
+            var oBindingContext = this.getView().getBindingContext();
+
+            if (!oBindingContext) {
+                MessageToast.show("No order selected");
+                return;
+            }
+
+            var sOrderId = oBindingContext.getProperty("ID");
+            var sOrderNumber = oBindingContext.getProperty("orderNumber");
+
+            MessageToast.show("Add item to order: " + sOrderNumber);
         },
 
-        hasValue: function (sValue) {
-            return !!sValue && sValue.trim().length > 0;
+        onDeleteSelected: function () {
+            var oTable = this.byId("orderItemsTable");
+            var aSelectedIndices = oTable.getSelectedIndices();
+
+            if (aSelectedIndices.length === 0) {
+                MessageToast.show("Please select items to delete");
+                return;
+            }
+
+            var aSelectedItems = [];
+            aSelectedIndices.forEach(function (iIndex) {
+                var oContext = oTable.getContextByIndex(iIndex);
+                if (oContext) {
+                    aSelectedItems.push({
+                        id: oContext.getProperty("ID"),
+                        name: oContext.getProperty("menuItemName"),
+                        customer: oContext.getProperty("customerName")
+                    });
+                }
+            });
+            var sMessage = "Are you sure you want to delete " + aSelectedItems.length + " item(s)?";
+            if (aSelectedItems.length === 1) {
+                sMessage = "Are you sure you want to delete item '" +
+                    aSelectedItems[0].name + "' for " + aSelectedItems[0].customer + "?";
+            }
+
+            MessageBox.confirm(sMessage, {
+                title: "Delete Items",
+                onClose: function (oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        this._deleteItems(aSelectedItems);
+                    }
+                }.bind(this)
+            });
+        },
+
+        _deleteItems: function (aItems) {
+            var oModel = this.getView().getModel();
+            var oTable = this.byId("orderItemsTable");
+
+            // TODO: Implement actual deletion logic
+            // For now, just show success message
+            MessageToast.show("Deleted " + aItems.length + " item(s)");
+
+            // Clear selection
+            oTable.clearSelection();
+
+            // Refresh the binding to update the table
+            var oBinding = oTable.getBinding("rows");
+            if (oBinding) {
+                oBinding.refresh();
+            }
+        },
+
+        onEditOrder: function () {
+            var oBindingContext = this.getView().getBindingContext();
+
+            if (!oBindingContext) {
+                MessageToast.show("No order selected");
+                return;
+            }
+
+            var sOrderId = oBindingContext.getProperty("ID");
+            MessageToast.show("Edit order: " + sOrderId);
+
+            // TODO: Navigate to edit page or open dialog
+            // var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            // oRouter.navTo("editOrder", { orderId: sOrderId });
+        },
+        onDeleteOrder: function () {
+            var oBindingContext = this.getView().getBindingContext();
+
+            if (!oBindingContext) {
+                MessageToast.show("No order selected");
+                return;
+            }
+
+            var sOrderNumber = oBindingContext.getProperty("orderNumber");
+            var sOrderId = oBindingContext.getProperty("ID");
+
+            MessageBox.confirm(
+                "Are you sure you want to delete order '" + sOrderNumber + "'?",
+                {
+                    title: "Delete Order",
+                    onClose: function (oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._deleteOrder(sOrderId);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+        _deleteOrder: function (sOrderId) {
+            // TODO: Implement actual deletion logic
+            MessageToast.show("Order deleted: " + sOrderId);
+
+            // Navigate back after deletion
+            this._navBack();
+        },
+
+        onSelectionChange: function (oEvent) {
+            var oTable = oEvent.getSource();
+            var aSelectedIndices = oTable.getSelectedIndices();
+
+            // Enable/disable delete button based on selection
+            var oDeleteButton = this.byId("deleteSelectedButton");
+            if (oDeleteButton) {
+                oDeleteButton.setEnabled(aSelectedIndices.length > 0);
+            }
+        },
+
+        onRefresh: function () {
+            var oBinding = this.getView().getElementBinding();
+            if (oBinding) {
+                oBinding.refresh();
+                MessageToast.show("Data refreshed");
+            }
         }
     });
 });

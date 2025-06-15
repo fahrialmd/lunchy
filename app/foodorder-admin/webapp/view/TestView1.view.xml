@@ -9,7 +9,7 @@
     height="100%"
 >
     <uxap:ObjectPageLayout
-        id="orderObjectPage"
+        id="testorderObjectPage"
         enableLazyLoading="true"
         useIconTabBar="true"
         showTitleInHeaderContent="true"
@@ -229,7 +229,7 @@
             <uxap:subSections>
                 <uxap:ObjectPageSubSection>
                     <table:Table
-                        id="orderItemsTable"
+                        id="testorderItemsTable"
                         rows="{
                                     path: 'items',
                                     parameters: {
