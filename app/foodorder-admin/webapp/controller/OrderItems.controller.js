@@ -9,90 +9,11 @@ sap.ui.define([
 
     return Controller.extend("foodorderadmin.controller.OrderItems", {
 
+        // Event Handlers
+
         onInit: function () {
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
             oRouter.getRoute("orderItems").attachPatternMatched(this._onRouteMatched, this);
-        },
-
-        _onRouteMatched: function (oEvent) {
-            var sOrderId = oEvent.getParameter("arguments").orderId;
-            var sOrderPath = "/Orders('" + sOrderId + "')";
-
-            this.getView().bindElement({
-                path: sOrderPath,
-                parameters: {
-                    $expand: "buyer,status,items($expand=itemStatus)"
-                },
-                events: {
-                    dataReceived: function (oEvent) {
-                        var oData = oEvent.getParameter("data");
-                        console.log("Received data:", oData);
-
-                        // Data exists, log details
-                        console.log("✅ Order found:", oData);
-                        console.log("Order Number:", oData.orderNumber);
-                        console.log("Items:", oData.items);
-                    }.bind(this)
-                }
-            });
-        },
-        /**
-         * Navigate back to previous page
-         */
-        _navBack: function () {
-            var oHistory = History.getInstance();
-            var sPreviousHash = oHistory.getPreviousHash();
-
-            if (sPreviousHash !== undefined) {
-                window.history.go(-1);
-            } else {
-                var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-                oRouter.navTo("main", {}, true);
-            }
-        },
-
-        formatStatusState: function (sStatusCode) {
-            switch (sStatusCode) {
-                case "O":
-                    return ValueState.Warning; // Open - Warning (yellow)
-                case "C":
-                    return ValueState.Success; // Close - Success (green)
-                default:
-                    return ValueState.None;
-            }
-        },
-
-        formatStatusIcon: function (sStatusCode) {
-            switch (sStatusCode) {
-                case "O":
-                    return "sap-icon://pending";
-                case "C":
-                    return "sap-icon://accept";
-                default:
-                    return "";
-            }
-        },
-
-        formatItemStatusState: function (sItemStatusCode) {
-            switch (sItemStatusCode) {
-                case "P":
-                    return ValueState.Success; // Paid - Success (green)
-                case "U":
-                    return ValueState.Error;   // Unpaid - Error (red)
-                default:
-                    return ValueState.None;
-            }
-        },
-
-        formatItemStatusIcon: function (sItemStatusCode) {
-            switch (sItemStatusCode) {
-                case "P":
-                    return "sap-icon://accept";
-                case "U":
-                    return "sap-icon://decline";
-                default:
-                    return "";
-            }
         },
 
         onAddItem: function () {
@@ -145,23 +66,26 @@ sap.ui.define([
             });
         },
 
-        _deleteItems: function (aItems) {
-            var oModel = this.getView().getModel();
-            var oTable = this.byId("orderItemsTable");
+        onSelectionChange: function (oEvent) {
+            var oTable = oEvent.getSource();
+            var aSelectedIndices = oTable.getSelectedIndices();
 
-            // TODO: Implement actual deletion logic
-            // For now, just show success message
-            MessageToast.show("Deleted " + aItems.length + " item(s)");
-
-            // Clear selection
-            oTable.clearSelection();
-
-            // Refresh the binding to update the table
-            var oBinding = oTable.getBinding("rows");
-            if (oBinding) {
-                oBinding.refresh();
+            // Enable/disable delete button based on selection
+            var oDeleteButton = this.byId("deleteSelectedButton");
+            if (oDeleteButton) {
+                oDeleteButton.setEnabled(aSelectedIndices.length > 0);
             }
         },
+
+        onRefresh: function () {
+            var oBinding = this.getView().getElementBinding();
+            if (oBinding) {
+                oBinding.refresh();
+                MessageToast.show("Data refreshed");
+            }
+        },
+
+
 
         onEditOrder: function () {
             var oBindingContext = this.getView().getBindingContext();
@@ -201,6 +125,27 @@ sap.ui.define([
                 }
             );
         },
+
+        // Internal Methods
+
+        _deleteItems: function (aItems) {
+            var oModel = this.getView().getModel();
+            var oTable = this.byId("orderItemsTable");
+
+            // TODO: Implement actual deletion logic
+            // For now, just show success message
+            MessageToast.show("Deleted " + aItems.length + " item(s)");
+
+            // Clear selection
+            oTable.clearSelection();
+
+            // Refresh the binding to update the table
+            var oBinding = oTable.getBinding("rows");
+            if (oBinding) {
+                oBinding.refresh();
+            }
+        },
+
         _deleteOrder: function (sOrderId) {
             // TODO: Implement actual deletion logic
             MessageToast.show("Order deleted: " + sOrderId);
@@ -209,23 +154,90 @@ sap.ui.define([
             this._navBack();
         },
 
-        onSelectionChange: function (oEvent) {
-            var oTable = oEvent.getSource();
-            var aSelectedIndices = oTable.getSelectedIndices();
+        _onRouteMatched: function (oEvent) {
+            var sOrderId = oEvent.getParameter("arguments").orderId;
+            var sOrderPath = "/Orders('" + sOrderId + "')";
 
-            // Enable/disable delete button based on selection
-            var oDeleteButton = this.byId("deleteSelectedButton");
-            if (oDeleteButton) {
-                oDeleteButton.setEnabled(aSelectedIndices.length > 0);
+            this.getView().bindElement({
+                path: sOrderPath,
+                parameters: {
+                    $expand: "buyer,status,items($expand=itemStatus)"
+                },
+                events: {
+                    dataReceived: function (oEvent) {
+                        var oData = oEvent.getParameter("data");
+                        console.log("Received data:", oData);
+
+                        // Data exists, log details
+                        console.log("✅ Order found:", oData);
+                        console.log("Order Number:", oData.orderNumber);
+                        console.log("Items:", oData.items);
+                    }.bind(this)
+                }
+            });
+        },
+
+        _navBack: function () {
+            var oHistory = History.getInstance();
+            var sPreviousHash = oHistory.getPreviousHash();
+
+            if (sPreviousHash !== undefined) {
+                window.history.go(-1);
+            } else {
+                var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+                oRouter.navTo("main", {}, true);
             }
         },
 
-        onRefresh: function () {
-            var oBinding = this.getView().getElementBinding();
-            if (oBinding) {
-                oBinding.refresh();
-                MessageToast.show("Data refreshed");
+        // Formatting Functions
+
+        formatStatusState: function (sStatusCode) {
+            switch (sStatusCode) {
+                case "O":
+                    return ValueState.Warning;
+                case "C":
+                    return ValueState.Success;
+                case "P":
+                    return ValueState.Success;
+                case "U":
+                    return ValueState.Error;
+                default:
+                    return ValueState.None;
             }
-        }
+        },
+
+        formatStatusIcon: function (sStatusCode) {
+            switch (sStatusCode) {
+                case "O":
+                    return "sap-icon://pending";
+                case "C":
+                    return "sap-icon://accept";
+                default:
+                    return "";
+            }
+        },
+
+        formatItemStatusState: function (sItemStatusCode) {
+            switch (sItemStatusCode) {
+                case "P":
+                    return ValueState.Success; // Paid - Success (green)
+                case "U":
+                    return ValueState.Error;   // Unpaid - Error (red)
+                default:
+                    return ValueState.None;
+            }
+        },
+
+        formatItemStatusIcon: function (sItemStatusCode) {
+            switch (sItemStatusCode) {
+                case "P":
+                    return "sap-icon://accept";
+                case "U":
+                    return "sap-icon://decline";
+                default:
+                    return "";
+            }
+        },
+
     });
 });

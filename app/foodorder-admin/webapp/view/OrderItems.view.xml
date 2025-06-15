@@ -35,12 +35,6 @@
                         />
                     </FlexBox>
                 </uxap:snappedHeading>
-                <!-- <uxap:expandedContent>
-                    <Text text="{description}" />
-                </uxap:expandedContent>
-                <uxap:snappedContent>
-                    <Text text="{description}" />
-                </uxap:snappedContent> -->
                 <uxap:actions>
                     <Button
                         text="Edit"
@@ -62,7 +56,7 @@
             >
                 <Avatar
                     src="https://www.universalorlando.com/webdata/k2/en/gb/files/Images/gds/uor-usf-minion-land-pop-a-nana-minion-popcorn-b.jpg"
-                    displaySize="XL"
+                    displaySize="L"
                     displayShape="Square"
                     showBorder="true"
                     class="sapUiMediumMarginEnd"
@@ -73,26 +67,13 @@
                         class="sapUiTinyMarginBottom"
                     >
                         <Label
-                            text="Status:"
-                            class="sapUiTinyMarginEnd orderLabel"
-                        />
-                        <ObjectStatus
-                            text="{status/name}"
-                            state="{path: 'status/code', formatter: '.formatStatusState'}"
-                            icon="{path: 'status/code', formatter: '.formatStatusIcon'}"
-                        />
-                    </HBox>
-                    <HBox
-                        alignItems="Start"
-                        class="sapUiTinyMarginBottom"
-                    >
-                        <Label
                             text="Buyer:"
                             class="sapUiTinyMarginEnd orderLabel"
                         />
-                        <Text
+                        <Link
                             text="{buyer/buyerName}"
                             class="sapThemeText-asHeading6"
+                            press="onBuyerPress"
                         />
                     </HBox>
                     <HBox
@@ -105,9 +86,9 @@
                         />
                         <Text
                             text="{
-                                        path: 'orderDate',
-                                        type: 'sap.ui.model.odata.type.Date'
-                                    }"
+                                path: 'orderDate',
+                                type: 'sap.ui.model.odata.type.Date'
+                            }"
                         />
                     </HBox>
                     <HBox
@@ -130,27 +111,6 @@
                         class="sapUiTinyMarginBottom"
                     >
                         <Label
-                            text="Delivery Fee:"
-                            class="sapUiTinyMarginEnd orderLabel"
-                        />
-                        <ObjectNumber
-                            core:require="{Currency: 'sap/ui/model/type/Currency'}"
-                            number="{
-                                    parts:[
-                                        {path:'deliveryFee'},
-                                        {path:'currency_code'}
-                                    ],
-                                    type: 'Currency',
-                                    formatOptions: {showMeasure: false}
-                                }"
-                            unit="{currency_code}"
-                        />
-                    </HBox>
-                    <HBox
-                        alignItems="Start"
-                        class="sapUiTinyMarginBottom"
-                    >
-                        <Label
                             text="Discount:"
                             class="sapUiTinyMarginEnd orderLabel"
                         />
@@ -164,19 +124,19 @@
                         class="sapUiTinyMarginBottom"
                     >
                         <Label
-                            text="Extra Charges:"
+                            text="Delivery Fee:"
                             class="sapUiTinyMarginEnd orderLabel"
                         />
                         <ObjectNumber
                             core:require="{Currency: 'sap/ui/model/type/Currency'}"
                             number="{
-                                    parts:[
-                                        {path:'extraCharges'},
-                                        {path:'currency_code'}
-                                    ],
-                                    type: 'Currency',
-                                    formatOptions: {showMeasure: false}
-                                }"
+                                parts:[
+                                    {path:'deliveryFee'},
+                                    {path:'currency_code'}
+                                ],
+                                type: 'Currency',
+                                formatOptions: {showMeasure: false}
+                            }"
                             unit="{currency_code}"
                         />
                     </HBox>
@@ -191,138 +151,151 @@
                         <ObjectNumber
                             core:require="{Currency: 'sap/ui/model/type/Currency'}"
                             number="{
-                                    parts:[
-                                        {path:'totalAmount'},
-                                        {path:'currency_code'}
-                                    ],
-                                    type: 'Currency',
-                                    formatOptions: {showMeasure: false}
-                                }"
+                                parts:[
+                                    {path:'totalAmount'},
+                                    {path:'currency_code'}
+                                ],
+                                type: 'Currency',
+                                formatOptions: {showMeasure: false}
+                            }"
                             unit="{currency_code}"
+                            emphasized="true"
                         />
                     </HBox>
                 </VBox>
                 <VBox class="sapUiTinyMarginTop sapUiMediumMarginEnd">
-                    <HBox
-                        alignItems="Start"
-                        class="sapUiTinyMarginBottom"
-                    >
-                        <Label
-                            text="Description:"
-                            class="sapUiTinyMarginEnd orderLabel"
-                        />
-                    </HBox>
-                    <HBox
-                        alignItems="Start"
-                        class="sapUiTinyMarginBottom"
-                    >
-                        <Text text="{description}" />
-                    </HBox>
+                    <Label
+                        text="Status:"
+                        class="sapUiTinyMarginEnd orderLabel"
+                    />
+                    <ObjectStatus
+                        text="{status/name}"
+                        state="{path: 'status/code', formatter: '.formatStatusState'}"
+                        icon="{path: 'status/code', formatter: '.formatStatusIcon'}"
+                        inverted="true"
+                        class="sapMObjectStatusLarge"
+                        active="true"
+                        press="onStatusPress"
+                    />
                 </VBox>
             </FlexBox>
         </uxap:headerContent>
 
-        <uxap:ObjectPageSection
-            title="Order Items"
-            titleUppercase="false"
-        >
-            <uxap:subSections>
-                <uxap:ObjectPageSubSection>
-                    <table:Table
-                        id="orderItemsTable"
-                        rows="{
+        <uxap:sections>
+            <uxap:ObjectPageSection
+                titleUppercase="false"
+                id="orderItemsSection"
+                title="Order Items"
+            >
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection
+                        id="orderItemsSubSection"
+                        titleUppercase="false"
+                    >
+                        <table:Table
+                            id="orderItemsTable"
+                            rows="{
                                     path: 'items',
                                     parameters: {
                                         expand: 'itemStatus',
                                         select: 'ID,customerName,menuItemName,quantity,unitPrice,deliveryFee,discountPercent,discountAmount,overchargeAmount,itemTotal,isConfirmed,specialRequest,currency_code,itemStatus'
                                     }
                                 }"
-                        selectionMode="MultiToggle"
-                        enableSelectAll="true"
-                        firstVisibleRow="0"
-                        enableColumnReordering="true"
-                        enableColumnFreeze="true"
-                        showNoData="true"
-                    >
-                        <table:extension>
-                            <Toolbar>
-                                <ToolbarSpacer />
-                                <Button
-                                    text="Add Item"
-                                    press="onAddItem"
-                                    type="Emphasized"
-                                />
-                                <Button
-                                    text="Delete Selected"
-                                    press="onDeleteSelected"
-                                    type="Transparent"
-                                />
-                            </Toolbar>
-                        </table:extension>
-                        <table:columns>
-                            <table:Column
-                                autoResizable="true"
-                                sortProperty="customerName"
-                                filterProperty="customerName"
-                            >
-                                <Label text="Customer Name" />
-                                <table:template>
-                                    <Text
-                                        text="{customerName}"
-                                        wrapping="false"
+                            selectionMode="MultiToggle"
+                            enableSelectAll="true"
+                            firstVisibleRow="0"
+                            enableColumnReordering="true"
+                            enableColumnFreeze="true"
+                            showNoData="true"
+                        >
+                            <table:extension>
+                                <Toolbar>
+                                    <Title
+                                        id="orderItemTableTitle"
+                                        text="Order Items"
+                                        level="H1"
                                     />
-                                </table:template>
-                            </table:Column>
-                            <table:Column
-                                autoResizable="true"
-                                sortProperty="menuItemName"
-                                filterProperty="menuItemName"
-                            >
-                                <Label text="Menu Item" />
-                                <table:template>
-                                    <Text
-                                        text="{menuItemName}"
-                                        wrapping="false"
+                                    <ToolbarSpacer />
+                                    <Button
+                                        icon="sap-icon://add"
+                                        press="onAddItem"
+                                        type="Transparent"
                                     />
-                                </table:template>
-                            </table:Column>
-                            <table:Column
-                                autoResizable="true"
-                                sortProperty="quantity"
-                                filterProperty="quantity"
-                                hAlign="End"
-                            >
-                                <Label text="Quantity" />
-                                <table:template>
-                                    <ObjectNumber
-                                        number="{quantity}"
-                                        unit="PC"
+                                    <Button
+                                        icon="sap-icon://delete"
+                                        press="onDeleteItem"
+                                        type="Transparent"
                                     />
-                                </table:template>
-                            </table:Column>
+                                    <Button
+                                        icon="sap-icon://edit"
+                                        press="oneditItem"
+                                        type="Transparent"
+                                    />
+                                </Toolbar>
+                            </table:extension>
+                            <table:columns>
+                                <table:Column
+                                    autoResizable="true"
+                                    sortProperty="customerName"
+                                    filterProperty="customerName"
+                                >
+                                    <Label text="Customer Name" />
+                                    <table:template>
+                                        <Text
+                                            text="{customerName}"
+                                            wrapping="false"
+                                        />
+                                    </table:template>
+                                </table:Column>
+                                <table:Column
+                                    autoResizable="true"
+                                    sortProperty="menuItemName"
+                                    filterProperty="menuItemName"
+                                >
+                                    <Label text="Menu Item" />
+                                    <table:template>
+                                        <Text
+                                            text="{menuItemName}"
+                                            wrapping="false"
+                                        />
+                                    </table:template>
+                                </table:Column>
+                                <table:Column
+                                    autoResizable="true"
+                                    sortProperty="quantity"
+                                    filterProperty="quantity"
+                                >
+                                    <Label text="Quantity" />
+                                    <table:template>
+                                        <ObjectNumber
+                                            number="{quantity}"
+                                            unit="PC"
+                                        />
+                                    </table:template>
+                                </table:Column>
 
-                            <table:Column
-                                autoResizable="true"
-                                sortProperty="unitPrice"
-                                filterProperty="unitPrice"
-                                hAlign="End"
-                            >
-                                <Label text="Unit Price" />
-                                <table:template>
-                                    <Text text="{unitPrice} {currency_code}" />
-                                </table:template>
-                            </table:Column>
-                            <table:Column
-                                autoResizable="true"
-                                sortProperty="itemTotal"
-                                filterProperty="itemTotal"
-                                hAlign="End"
-                            >
-                                <Label text="Item Total" />
-                                <table:template>
-                                    <ObjectNumber
-                                        core:require="{Currency: 'sap/ui/model/type/Currency'}"
-                                        number="{
+                                <table:Column
+                                    autoResizable="true"
+                                    sortProperty="unitPrice"
+                                    filterProperty="unitPrice"
+                                >
+                                    <Label text="Unit Price" />
+                                    <table:template>
+                                        <Text
+                                            text="{unitPrice} {currency_code}"
+                                        />
+                                    </table:template>
+                                </table:Column>
+                                <table:Column
+                                    autoResizable="true"
+                                    sortProperty="itemTotal"
+                                    filterProperty="itemTotal"
+                                >
+                                    <Label text="Item Total" />
+                                    <table:template>
+                                        <ObjectNumber
+                                            core:require="{Currency: 'sap/ui/model/type/Currency'}"
+                                            number="{
                                                 parts:[
                                                     {path:'itemTotal'},
                                                     {path:'currency_code'}
@@ -330,28 +303,142 @@
                                                 type: 'Currency',
                                                 formatOptions: {showMeasure: false}
                                             }"
-                                        unit="{currency_code}"
-                                    />
-                                </table:template>
-                            </table:Column>
-                            <table:Column
-                                autoResizable="true"
-                                sortProperty="itemStatus/name"
-                                filterProperty="itemStatus/name"
-                            >
-                                <Label text="Status" />
-                                <table:template>
-                                    <ObjectStatus
-                                        text="{itemStatus/name}"
-                                        state="{path: 'itemStatus/code', formatter: '.formatStatusState'}"
-                                        icon="{path: 'itemStatus/code', formatter: '.formatStatusIcon'}"
-                                    />
-                                </table:template>
-                            </table:Column>
-                        </table:columns>
-                    </table:Table>
-                </uxap:ObjectPageSubSection>
-            </uxap:subSections>
-        </uxap:ObjectPageSection>
+                                            unit="{currency_code}"
+                                        />
+                                    </table:template>
+                                </table:Column>
+                                <table:Column
+                                    autoResizable="true"
+                                    sortProperty="itemStatus/name"
+                                    filterProperty="itemStatus/name"
+                                >
+                                    <Label text="Status" />
+                                    <table:template>
+                                        <ObjectStatus
+                                            text="{itemStatus/name}"
+                                            state="{path: 'itemStatus/code', formatter: '.formatStatusState'}"
+                                        />
+                                    </table:template>
+                                </table:Column>
+                            </table:columns>
+                        </table:Table>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <uxap:ObjectPageSection
+                titleUppercase="false"
+                id="summarySection"
+                title="Order Summary"
+            >
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection
+                        id="summarySubSection"
+                        titleUppercase="false"
+                    >
+                        <uxap:blocks>
+                            <VBox class="sapUiMediumMargin">
+                                <Panel
+                                    class="sapUiResponsiveMargin"
+                                    width="auto"
+                                >
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title
+                                                text="Financial Summary"
+                                                level="H4"
+                                            />
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <content>
+                                        <layout:VerticalLayout
+                                            class="sapUiContentPadding"
+                                        >
+                                            <HBox
+                                                justifyContent="SpaceBetween"
+                                                class="sapUiTinyMarginBottom"
+                                            >
+                                                <Label text="Subtotal:" />
+                                                <ObjectNumber
+                                                    core:require="{Currency: 'sap/ui/model/type/Currency'}"
+                                                    number="{
+                                                        parts:[
+                                                            {path:'subtotal'},
+                                                            {path:'currency_code'}
+                                                        ],
+                                                        type: 'Currency',
+                                                        formatOptions: {showMeasure: false}
+                                                    }"
+                                                    unit="{currency_code}"
+                                                />
+                                            </HBox>
+                                            <HBox
+                                                justifyContent="SpaceBetween"
+                                                class="sapUiTinyMarginBottom"
+                                            >
+                                                <Label text="Delivery Fee:" />
+                                                <ObjectNumber
+                                                    core:require="{Currency: 'sap/ui/model/type/Currency'}"
+                                                    number="{
+                                                        parts:[
+                                                            {path:'deliveryFee'},
+                                                            {path:'currency_code'}
+                                                        ],
+                                                        type: 'Currency',
+                                                        formatOptions: {showMeasure: false}
+                                                    }"
+                                                    unit="{currency_code}"
+                                                />
+                                            </HBox>
+                                            <HBox
+                                                justifyContent="SpaceBetween"
+                                                class="sapUiTinyMarginBottom"
+                                            >
+                                                <Label text="Extra Charges:" />
+                                                <ObjectNumber
+                                                    core:require="{Currency: 'sap/ui/model/type/Currency'}"
+                                                    number="{
+                                                        parts:[
+                                                            {path:'extraCharges'},
+                                                            {path:'currency_code'}
+                                                        ],
+                                                        type: 'Currency',
+                                                        formatOptions: {showMeasure: false}
+                                                    }"
+                                                    unit="{currency_code}"
+                                                />
+                                            </HBox>
+                                            <HBox
+                                                justifyContent="SpaceBetween"
+                                                class="sapUiTinyMarginBottom"
+                                            >
+                                                <Label
+                                                    text="Total Amount:"
+                                                    class="sapThemeText-asHeading6"
+                                                />
+                                                <ObjectNumber
+                                                    core:require="{Currency: 'sap/ui/model/type/Currency'}"
+                                                    number="{
+                                                        parts:[
+                                                            {path:'totalAmount'},
+                                                            {path:'currency_code'}
+                                                        ],
+                                                        type: 'Currency',
+                                                        formatOptions: {showMeasure: false}
+                                                    }"
+                                                    unit="{currency_code}"
+                                                    emphasized="true"
+                                                    state="Success"
+                                                />
+                                            </HBox>
+                                        </layout:VerticalLayout>
+                                    </content>
+                                </Panel>
+                            </VBox>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+        </uxap:sections>
     </uxap:ObjectPageLayout>
 </mvc:View>
