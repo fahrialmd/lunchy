@@ -5,8 +5,9 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/export/Spreadsheet",
-    "sap/ui/export/library"
-], function (Controller, Filter, FilterOperator, MessageToast, MessageBox, Spreadsheet, exportLibrary) {
+    "sap/ui/export/library",
+    "sap/ui/core/Fragment"
+], function (Controller, Filter, FilterOperator, MessageToast, MessageBox, Spreadsheet, exportLibrary, Fragment) {
     "use strict";
 
     const EdmType = exportLibrary.EdmType;
@@ -154,10 +155,173 @@ sap.ui.define([
             });
         },
 
+        // Replace your existing onCreateOrder method with this:
         onCreateOrder: function () {
-            MessageToast.show("Create Order functionality - To be implemented");
-            // Implement order creation logic
+            // Check if dialog already exists
+            if (!this._oCreateOrderDialog) {
+                // Load the fragment
+                Fragment.load({
+                    id: this.getView().getId(),
+                    name: "foodorderadmin.view.CreateOrderDialog",
+                    controller: this
+                }).then(function (oDialog) {
+                    this._oCreateOrderDialog = oDialog;
+                    this.getView().addDependent(this._oCreateOrderDialog);
+                    this._openCreateOrderDialog();
+                }.bind(this));
+            } else {
+                this._openCreateOrderDialog();
+            }
         },
+
+        _openCreateOrderDialog: function () {
+            this._setDefaultValues();
+            this._oCreateOrderDialog.open();
+        },
+
+        _setDefaultValues: function () {
+            // Set current date and time as defaults
+            const oCurrentDate = new Date();
+
+            // Set default date to today
+            const oDatePicker = Fragment.byId(this.getView().getId(), "orderDatePicker");
+            if (oDatePicker) {
+                oDatePicker.setDateValue(oCurrentDate);
+            }
+
+            // Set default time to current time
+            const oTimePicker = Fragment.byId(this.getView().getId(), "orderTimePicker");
+            if (oTimePicker) {
+                oTimePicker.setDateValue(oCurrentDate);
+            }
+
+            // Clear all input fields
+            this._clearDialogInputs();
+        },
+
+        _clearDialogInputs: function () {
+            const aInputIds = [
+                "buyerNameInput", "buyerEmpIdInput", "buyerContactInput",
+                "numberOfPeopleInput", "deliveryFeeInput", "discountPercentInput"
+            ];
+
+            aInputIds.forEach(function (sInputId) {
+                const oInput = Fragment.byId(this.getView().getId(), sInputId);
+                if (oInput) {
+                    oInput.setValue("");
+                    oInput.setValueState("None");
+                }
+            }.bind(this));
+
+            // Reset delivery fee and discount to 0
+            const oDeliveryFeeInput = Fragment.byId(this.getView().getId(), "deliveryFeeInput");
+            if (oDeliveryFeeInput) {
+                oDeliveryFeeInput.setValue("0");
+            }
+
+            const oDiscountInput = Fragment.byId(this.getView().getId(), "discountPercentInput");
+            if (oDiscountInput) {
+                oDiscountInput.setValue("0");
+            }
+        },
+
+        onConfirmCreateOrder: function () {
+            // Validate inputs
+            if (!this._validateCreateOrderInputs()) {
+                return;
+            }
+
+            // Collect data from the dialog
+            const oOrderData = this._collectOrderData();
+
+            // Create the order
+            this._createNewOrder(oOrderData);
+        },
+
+        _validateCreateOrderInputs: function () {
+            let bValid = true;
+            const aRequiredFields = [
+                { id: "buyerNameInput", name: "Buyer Name" },
+                { id: "orderDatePicker", name: "Order Date" },
+                { id: "orderTimePicker", name: "Order Time" },
+                { id: "numberOfPeopleInput", name: "Number of People" }
+            ];
+
+            aRequiredFields.forEach(function (oField) {
+                const oControl = Fragment.byId(this.getView().getId(), oField.id);
+                if (oControl) {
+                    const sValue = oControl.getValue ? oControl.getValue() : oControl.getDateValue();
+                    if (!sValue || sValue === "") {
+                        oControl.setValueState("Error");
+                        oControl.setValueStateText(oField.name + " is required");
+                        bValid = false;
+                    } else {
+                        oControl.setValueState("None");
+                    }
+                }
+            }.bind(this));
+
+            if (!bValid) {
+                MessageToast.show("Please fill in all required fields");
+            }
+
+            return bValid;
+        },
+
+        _collectOrderData: function () {
+            // Generate order number (you might want to implement your own logic)
+            const sOrderNumber = "ORD-" + Date.now();
+
+            return {
+                orderNumber: sOrderNumber,
+                buyer: {
+                    buyerName: Fragment.byId(this.getView().getId(), "buyerNameInput").getValue(),
+                    buyerEmpid: Fragment.byId(this.getView().getId(), "buyerEmpIdInput").getValue(),
+                    buyerContact: Fragment.byId(this.getView().getId(), "buyerContactInput").getValue()
+                },
+                orderDate: Fragment.byId(this.getView().getId(), "orderDatePicker").getValue(),
+                orderTime: Fragment.byId(this.getView().getId(), "orderTimePicker").getValue(),
+                numberOfPeople: parseInt(Fragment.byId(this.getView().getId(), "numberOfPeopleInput").getValue()) || 0,
+                deliveryFee: parseFloat(Fragment.byId(this.getView().getId(), "deliveryFeeInput").getValue()) || 0,
+                discountPercent: parseFloat(Fragment.byId(this.getView().getId(), "discountPercentInput").getValue()) || 0,
+                currency_code: Fragment.byId(this.getView().getId(), "currencyComboBox").getSelectedKey(),
+                status_code: Fragment.byId(this.getView().getId(), "statusComboBox").getSelectedKey(),
+                totalAmount: 0 // Will be calculated when items are added
+            };
+        },
+
+        _createNewOrder: function (oOrderData) {
+            const oModel = this.getOwnerComponent().getModel();
+
+            // Create the order using OData V4
+            const oListBinding = oModel.bindList("/Orders");
+
+            try {
+                oListBinding.create(oOrderData);
+
+                MessageToast.show("Order created successfully: " + oOrderData.orderNumber);
+
+                // Close dialog and refresh data
+                this._oCreateOrderDialog.close();
+                this._loadData(); // Refresh the table
+
+            } catch (error) {
+                MessageBox.error("Failed to create order: " + error.message);
+            }
+        },
+
+        onCancelCreateOrder: function () {
+            this._oCreateOrderDialog.close();
+        },
+
+        // Add this method to properly destroy the dialog when the view is destroyed
+        onExit: function () {
+            if (this._oCreateOrderDialog) {
+                this._oCreateOrderDialog.destroy();
+            }
+        },
+
+        // =========================================================== */
 
         onEditOrder: function (oEvent) {
             const oBindingContext = oEvent.getSource().getBindingContext();
