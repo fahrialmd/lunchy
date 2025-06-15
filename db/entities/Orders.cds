@@ -10,7 +10,7 @@ using {com.fahrialmd.lunchy as lunchy} from '../index';
 
 // Order Header Entity
 entity Orders : cuid, managed {
-    orderNumber      : String(10)                          @title: 'Order Number';
+    orderNumber      : String(12)                          @title: 'Order Number';
     description      : String(255)                         @title: 'Description';
     buyer            : Association to lunchy.Buyers;
     orderDate        : Date                                @title: 'Order Date';

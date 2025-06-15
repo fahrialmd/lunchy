@@ -17,3 +17,11 @@ entity OrderStatuses : CodeList {
             Close = 'C';
         } default 'O';
 }
+
+// Payment Method Type CodeList
+entity PaymentMethodTypes : CodeList {
+    key code : String(10) enum {
+            Bank = 'B';
+            EWallet = 'E';
+        };
+}

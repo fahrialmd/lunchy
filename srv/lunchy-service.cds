@@ -6,14 +6,18 @@ namespace com.fahrialmd.lunchy.service;
 service LunchyService {
 
     // Main entities
-    entity Orders        as projection on lunchy.Orders;
-    entity OrderItems    as projection on lunchy.OrderItems;
-    entity Buyers        as projection on lunchy.Buyers;
+    entity Orders             as projection on lunchy.Orders;
+    entity OrderItems         as projection on lunchy.OrderItems;
+    entity Buyers             as projection on lunchy.Buyers;
+    entity PaymentMethods     as projection on lunchy.PaymentMethods;
 
     // Code lists
     @readonly
-    entity ItemStatuses  as projection on lunchy.ItemStatuses;
+    entity ItemStatuses       as projection on lunchy.ItemStatuses;
 
     @readonly
-    entity OrderStatuses as projection on lunchy.OrderStatuses;
+    entity OrderStatuses      as projection on lunchy.OrderStatuses;
+
+    @readonly
+    entity PaymentMethodTypes as projection on lunchy.PaymentMethodTypes;
 }

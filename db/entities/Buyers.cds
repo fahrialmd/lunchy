@@ -9,12 +9,15 @@ using {com.fahrialmd.lunchy as lunchy} from '../index';
 
 // Buyer Entity
 entity Buyers : cuid, managed {
-    buyerName    : String(100);
-    buyerEmpid   : String(20);
-    buyerContact : String(20);
-    isActive     : Boolean default true;
+    buyerName      : String(100);
+    buyerEmpid     : String(20);
+    isActive       : Boolean default true;
 
     // Navigation to orders
-    orders       : Association to many lunchy.Orders
-                       on orders.buyer = $self;
+    orders         : Association to many lunchy.Orders
+                         on orders.buyer = $self;
+
+    // Navigation to payment methods
+    paymentMethods : Association to many lunchy.PaymentMethods
+                         on paymentMethods.buyer = $self;
 }
